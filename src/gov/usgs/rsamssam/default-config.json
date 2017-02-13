@@ -1,0 +1,15 @@
+{
+    "stations": {
+        "FMW:EHZ:UW:": [1,1,0],
+        "LO2:EHZ:UW:": [1,0,0],
+        "OBSR:BHZ:CC:": [1,1,0],
+        "STAR:EHZ:UW:": [1,1,0]
+    },
+    "rsam_directory": "E:\\Data\\RSAM2017",
+    "ssam_directory": "E:\\Data\\SSAM2017",
+    "inventory_filter": {},
+    "primary_port": 16030,
+    "primary_server": "127.0.0.1",
+    "secondary_port": 16022,
+    "secondary_server": "pubavo1.wr.usgs.gov"
+}
