@@ -1,9 +1,9 @@
 {
     "stations": {
-        "FMW:EHZ:UW:": [1,1,0],
+        "FMW:EHZ:UW:": [1,1,1],
         "LO2:EHZ:UW:": [1,0,0],
-        "OBSR:BHZ:CC:": [1,1,0],
-        "STAR:EHZ:UW:": [1,1,0]
+        "OBSR:BHZ:CC:": [1,1,1],
+        "STAR:EHZ:UW:": [1,1,1]
     },
     "rsam_directory": "E:\\Data\\RSAM2017",
     "ssam_directory": "E:\\Data\\SSAM2017",

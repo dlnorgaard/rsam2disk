@@ -7,37 +7,47 @@ import os
 import math as M
 import numpy as np
 from matplotlib import mlab
-from obspy.imaging.cm import obspy_sequential
         
 
-filename_format="%s_%d%02d%02d_%s_%d.csv"
-date_format="%d-%b-%Y %H:%M:%S"
+filename_format="%s_%d%02d%02d_%s_%d.dat"
+date_format="%d-%b-%Y %H:%M"
 bands=[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 8, 10, 15, 20 ]
 
 #===============================================================================
 # process - calculate SSAM and write to file
 #===============================================================================
-def process(stream, station_id, et, config, station_data):
-    ssam=calculate(stream)
+def process(stream, station_id, et, config, station_data):  
+    stream.merge(method=1)  
+    data=np.array([])  
+    for tr in stream:
+        data=np.append(data, tr.data)
+    freq, specgram, time = spectrogram(data, stream[0].stats.sampling_rate)
+    ssam=calculate_custom(specgram, freq)
+    #ssam=calculate(specgram)
     missed=station_data['ssam_missed']
     station_data['ssam_missed']=write(ssam, station_id, et, config, missed)
     return station_data  
 
 #===============================================================================
+# calculate
+#===============================================================================
+def calculate(specgram):
+    ssam=[]
+    for spec in specgram:
+        ssam.append(np.average(spec))
+    return ssam
+
+#===============================================================================
 # calculate SSAM values for given frequency bands. 
 #===============================================================================
-def calculate(stream):    
-    stream.merge(method=1)  
-    data=np.array([])  
-    for tr in stream:
-        data=np.append(data, tr.data)
-    specgram, freq, time = spectrogram(tr.data, tr.stats.sampling_rate) 
+def calculate_custom(specgram, freq):  
     ssam=[]
     minf=0
     maxf=0
     for i in range(0,len(bands)):
         b=bands[i]
         maxf=b  
+        #print("Band=",b, minf, maxf)
         tempsum=0
         count=0
         for j in range(0, len(freq)):
@@ -46,7 +56,10 @@ def calculate(stream):
                 favg = np.average(specgram[j])
                 tempsum += favg
                 count += 1
-        v=round(tempsum/count)
+        v=tempsum/count
+        if i==0 and v==7:        
+            print("Length specgram: "+str(len(specgram))+"x"+str(len(specgram[0])))
+            print(specgram)
         #print(i,b,tempsum/count, minf, maxf)
         ssam.append(v)
         minf=b 
@@ -79,10 +92,7 @@ def _nearest_pow_2(x):
 #===============================================================================
 # spectrogram - modified version of obspy.imaging.spectrogram.spectrogram().
 #===============================================================================
-def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
-                outfile=None, fmt=None, axes=None, dbscale=False,
-                mult=8.0, cmap=obspy_sequential, zorder=None, title=None,
-                show=True, sphinx=False, clip=[0.0, 1.0]):
+def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False, dbscale=False, mult=8.0):
     """
     Computes and plots spectrogram of the input data.
 
@@ -98,39 +108,13 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :type log: bool
     :param log: Logarithmic frequency axis if True, linear frequency axis
         otherwise.
-    :type outfile: str
-    :param outfile: String for the filename of output file, if None
-        interactive plotting is activated.
-    :type fmt: str
-    :param fmt: Format of image to save
-    :type axes: :class:`matplotlib.axes.Axes`
-    :param axes: Plot into given axes, this deactivates the fmt and
-        outfile option.
     :type dbscale: bool
     :param dbscale: If True 10 * log10 of color values is taken, if False the
         sqrt is taken.
     :type mult: float
     :param mult: Pad zeros to length mult * wlen. This will make the
         spectrogram smoother.
-    :type cmap: :class:`matplotlib.colors.Colormap`
-    :param cmap: Specify a custom colormap instance. If not specified, then the
-        default ObsPy sequential colormap is used.
-    :type zorder: float
-    :param zorder: Specify the zorder of the plot. Only of importance if other
-        plots in the same axes are executed.
-    :type title: str
-    :param title: Set the plot title
-    :type show: bool
-    :param show: Do not call `plt.show()` at end of routine. That way, further
-        modifications can be done to the figure before showing it.
-    :type sphinx: bool
-    :param sphinx: Internal flag used for API doc generation, default False
-    :type clip: [float, float]
-    :param clip: adjust colormap to clip at lower and/or upper end. The given
-        percentages of the amplitude range (linear or logarithmic depending
-        on option `dbscale`) are clipped.
     """
-#     import matplotlib.pyplot as plt
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
 
@@ -151,100 +135,23 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     nlap = int(nfft * float(per_lap))
 
     data = data - data.mean()
-#     end = npts / samp_rate
 
     # Here we call not plt.specgram as this already produces a plot
     # matplotlib.mlab.specgram should be faster as it computes only the
     # arrays
     # XXX mlab.specgram uses fft, would be better and faster use rfft
-    specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
-                                         pad_to=mult, noverlap=nlap)
+    specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft, 
+                                         pad_to=mult, noverlap=nlap, detrend='linear')
+    
 
     # db scale and remove zero/offset for amplitude
     if dbscale:
         specgram = 10 * np.log10(specgram[1:, :])
     else:
         specgram = np.sqrt(specgram[1:, :])
-    freq = freq[1:]
 
-    vmin, vmax = clip
-    if vmin < 0 or vmax > 1 or vmin >= vmax:
-        msg = "Invalid parameters for clip option."
-        raise ValueError(msg)
-    _range = float(specgram.max() - specgram.min())
-    vmin = specgram.min() + vmin * _range
-    vmax = specgram.min() + vmax * _range
-#     norm = Normalize(vmin, vmax, clip=True)
-    
-#     if not axes:
-#         fig = plt.figure()
-#         ax = fig.add_subplot(111)
-#     else:
-#         ax = axes
+    return freq, specgram, time
 
-    # calculate half bin width
-    halfbin_time = (time[1] - time[0]) / 2.0
-    halfbin_freq = (freq[1] - freq[0]) / 2.0
-
-    # argument None is not allowed for kwargs on matplotlib python 3.3
-#     kwargs = {k: v for k, v in (('cmap', cmap), ('zorder', zorder))
-#               if v is not None}
-
-    if log:
-        # pcolor expects one bin more at the right end
-        freq = np.concatenate((freq, [freq[-1] + 2 * halfbin_freq]))
-        time = np.concatenate((time, [time[-1] + 2 * halfbin_time]))
-        # center bin
-        time -= halfbin_time
-        freq -= halfbin_freq
-        # Log scaling for frequency values (y-axis)
-#         ax.set_yscale('log')
-#         # Plot times
-#         ax.pcolormesh(time, freq, specgram, norm=norm, **kwargs)
-    else:
-        # this method is much much faster!
-        specgram = np.flipud(specgram)
-        # center bin
-#         extent = (time[0] - halfbin_time, time[-1] + halfbin_time,
-#                   freq[0] - halfbin_freq, freq[-1] + halfbin_freq)
-#         ax.imshow(specgram, interpolation="nearest", extent=extent, **kwargs)
-
-
-    #fig.close()
-    return specgram, freq, time
-    
-    # **Not sure if I need anything below there yet.  Keep for now.**
-    
-    
-#     # set correct way of axis, whitespace before and after with window
-#     # length
-#     ax.axis('tight')
-#     ax.set_xlim(0, end)
-#     ax.grid(False)
-# 
-#     if axes:
-#         return ax
-# 
-#     ax.set_xlabel('Time [s]')
-#     ax.set_ylabel('Frequency [Hz]')
-#     if title:
-#         ax.set_title(title)
-# 
-#     if not sphinx:
-#         # ignoring all NumPy warnings during plot
-#         temp = np.geterr()
-#         np.seterr(all='ignore')
-#         plt.draw()
-#         np.seterr(**temp)
-#     if outfile:
-#         if fmt:
-#             fig.savefig(outfile, format=fmt)
-#         else:
-#             fig.savefig(outfile)
-#     elif show:
-#         plt.show()
-#     else:
-#         return fig
             
 #===============================================================================
 # write - write SSAM to file
@@ -252,7 +159,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
 def write(ssam, station_id, et, config, missed):
     text=missed+et.strftime(date_format)
     for v in ssam:
-        text += " %d"%v
+        text += " %05d"%v
     if config.print_data or config.print_debug:
         print(station_id+"     "+text)
     try:

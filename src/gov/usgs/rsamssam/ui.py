@@ -381,7 +381,7 @@ class MainUI():
         else:
             return
        
-        temp_stations=deepcopy(self.config.stations)
+        temp_stations=self.config.temp_stations
         if station_id not in temp_stations.keys():
             # Add station info to configuration if nothing was enabled
             self.config.controller.station_data[station_id]=self.config.controller.create_station_data(station_id)
@@ -409,5 +409,5 @@ class MainUI():
                 station_config[idx]=1
                 print(station_id+" updated "+ str(station_config))
                 
-        self.config.temp_stations=temp_stations
+        #self.config.temp_stations=temp_stations
         self.update_table(self.config.controller.get_inventory())  

@@ -67,7 +67,8 @@ class Controller(Thread):
     def create_station_data(self, station_id): 
         # set initial start time
         now = UTCDateTime()
-        st = now - (now.timestamp % 600) 
+        st = now - (now.timestamp % 600)      # To start from top of previous 10 minutes (e.g. XX:10, XX:20). May results in duplicate one minute data being written out.
+        #st = now - (now.timestamp % 600)     # To start from top of previous minute
         # get station data
         data=station_id.split(":")
         station = data[0]
@@ -123,7 +124,8 @@ class Controller(Thread):
                         continue 
                     # Get station data from Wave Server
                     stream = self.client.get_waveforms(network, station, location, channel, st, et) 
-                    if stream[0].stats.npts==0: # No data (e.g. tank gap, etc.)
+                    if len(stream)==0 or stream[0].stats.npts==0:        # No data (e.g. tank gap, etc.)
+                        print(network, station, channel, st, et)
                         continue
                     self.station_data[station_id]['stream'].append(stream)  
                     if self.config.print_stream:
@@ -175,8 +177,6 @@ class Controller(Thread):
                 time.sleep(2)
             except (ConnectionError, ConnectionRefusedError, TimeoutError) as err:  
                 self.handle_connection_error(err)         
-            except Exception as err:
-                print(err)
              
     #===========================================================================
     # get_inventory - Return WaveServer inventory
