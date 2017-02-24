@@ -9,7 +9,6 @@ from tkinter import messagebox
 from tkinter import filedialog
 from PIL import Image, ImageTk
 import os
-from copy import deepcopy
 
 #===============================================================================
 # MainUI
@@ -258,7 +257,7 @@ class MainUI():
     # about
     #===============================================================================
     def about(self):
-        info="RSAM/SSAM 2/10/2017"
+        info="RSAM/SSAM 2/15/2017"
         info+="\ndnorgaard@usgs.gov"
         messagebox.showinfo("About", info)
         
@@ -299,6 +298,7 @@ class MainUI():
     def reload(self, server, port, primary_secondary):
         self.config.primary=primary_secondary
         self.config.controller.set_connection(server, port)
+        self.config.controller.init_station_data()
         self.table.delete(*self.table.get_children())
         self.update_table(self.config.controller.get_inventory())           
         

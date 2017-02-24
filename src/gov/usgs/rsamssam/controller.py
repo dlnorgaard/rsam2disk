@@ -20,7 +20,6 @@ class Controller(Thread):
     '''
     classdocs
     '''
-    station_data={}                     # Station data
     fails=0                             # Keeps track of failed connections.
     retry=10                            # Number of retries after failed connections.
     runFlag=True                        # Set to False to stop process
@@ -55,7 +54,8 @@ class Controller(Thread):
     #===========================================================================
     # init_station_data
     #===========================================================================
-    def init_station_data(self):        
+    def init_station_data(self):     
+        self.station_data={}   
         for station_id in self.config.stations.keys():
             self.station_data[station_id]=self.create_station_data(station_id)
             
@@ -125,7 +125,9 @@ class Controller(Thread):
                     # Get station data from Wave Server
                     stream = self.client.get_waveforms(network, station, location, channel, st, et) 
                     if len(stream)==0 or stream[0].stats.npts==0:        # No data (e.g. tank gap, etc.)
-                        print(network, station, channel, st, et)
+                        print(network, station, channel, st, et, " Missing data (tank gap?)")
+                        # update start time and end time
+                        self.station_data[station_id]['start_time']=et  
                         continue
                     self.station_data[station_id]['stream'].append(stream)  
                     if self.config.print_stream:
@@ -136,6 +138,11 @@ class Controller(Thread):
                         if self.config.print_debug:
                             print(station_id, "Calculating 1 Min RSAM")
                         self.station_data[station_id]=rsam.process(stream, station_id, et, 60, self.config, self.station_data[station_id]) 
+                    # 1 min SSAM
+                    if station_config[2]==1: 
+                        if self.config.print_debug:
+                            print(station_id, "Calculating 1 Min SSAM")     
+                        self.station_data[station_id]=ssam.process(stream, station_id, et, self.config, self.station_data[station_id]) 
                     # 10 min RSAM
                     if station_config[1]==1:  
                         if len(self.station_data[station_id]['stream'])==10:
@@ -151,11 +158,6 @@ class Controller(Thread):
                             stream10.merge(method=1)                        
                             self.station_data[station_id]=rsam.process(stream10, station_id, et, 600, self.config, self.station_data[station_id]) 
                             self.station_data[station_id]['stream']=[]  # reset
-                    # 1 min SSAM
-                    if station_config[2]==1: 
-                        if self.config.print_debug:
-                            print(station_id, "Calculating 1 Min SSAM")     
-                        self.station_data[station_id]=ssam.process(stream, station_id, et, self.config, self.station_data[station_id]) 
                           
                     # update start time and end time
                     self.station_data[station_id]['start_time']=et  
@@ -209,7 +211,7 @@ class Controller(Thread):
             self.config.runFlag=False
             self.fails=0
             return
-        time.sleep(3)   # wait a bit before retrying connection
+        time.sleep(10)   # wait a bit before retrying connection
         # alternate attempts between primary and secondary servers
         if self.config.primary:
             self.set_connection(self.config.secondary_server, self.config.secondary_port)

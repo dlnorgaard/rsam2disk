@@ -30,6 +30,37 @@ def process(stream, station_id, et, duration, config, station_data):
     return station_data
 
 #===============================================================================
+# calculate_rsam - Calculates:
+# rsam - RSAM, or time-averaged amplitude for given stream
+# max - Maximum amplitude
+# min - Minimu amplitude
+# npts - Number of points in stream
+# dcbias - Estimated DC offset
+# Returns array [ rsam, max, min, npts, dcbias ]
+#===============================================================================
+def calculate(stream):
+    dcbias=calculate_dcbias(stream)
+    
+    # loop through again to rectify the data
+    smax = 0  # Max amplitude in stream
+    smin = 0  # Min amplitude in stream
+    ssum = 0  # Now calculate sum of amplitudes with rectified data
+    npts = 0  # Number of (valid) values in stream
+    for trace in stream:
+        data=trace.data
+        if np.ma.is_masked(data):
+            data=trace.data.compressed()   # returns only the valid entries 
+        smax = max(data.max(), smax)
+        smin = min(data.min(), smin)
+        bias_array = np.empty(data.size)
+        bias_array.fill(dcbias)  # create array of same size as trace data with dcbias as value
+        rectified = np.where(np.less(data, bias_array), 2 * bias_array - data, data)
+        ssum += sum(rectified)
+        npts += data.size
+    rsam = (ssum / npts) - dcbias
+    return [rsam, smax, smin, npts, dcbias]
+
+#===============================================================================
 # calculate_dcbias
 #===============================================================================
 def calculate_dcbias(stream):
@@ -57,51 +88,6 @@ def calculate_dcbias(stream):
         raise
     
     return dcbias
-
-#===============================================================================
-# calculate_rsam - Calculates:
-# rsam - RSAM, or time-averaged amplitude for given stream
-# max - Maximum amplitude
-# min - Minimu amplitude
-# npts - Number of points in stream
-# dcbias - Estimated DC offset
-# Returns array [ rsam, max, min, npts, dcbias ]
-#===============================================================================
-def calculate(stream):
-#     smax = 0  # Max amplitude in stream
-#     ssum = 0  # Sum of valid values before rectifying
-#     smin = 0  # Min amplitude in stream
-#     npts = 0  # Number of (valid) values in stream
-#     # loop through once to approximate DC bias
-#     for trace in stream:
-#         data=trace.data
-#         if np.ma.is_masked(data):
-#             data=trace.data.compressed()   # returns only the valid entries 
-#         smax = max(data.max(), smax)
-#         smin = min(data.min(), smin)
-#         ssum += data.sum()
-#         npts += data.size
-#     dcbias = ssum / npts  # Use this as DC bias for now
-    dcbias=calculate_dcbias(stream)
-    
-    # loop through again to rectify the data
-    smax = 0  # Max amplitude in stream
-    smin = 0  # Min amplitude in stream
-    ssum = 0  # Now calculate sum of amplitudes with rectified data
-    npts = 0  # Number of (valid) values in stream
-    for trace in stream:
-        data=trace.data
-        if np.ma.is_masked(data):
-            data=trace.data.compressed()   # returns only the valid entries 
-        smax = max(data.max(), smax)
-        smin = min(data.min(), smin)
-        bias_array = np.empty(data.size)
-        bias_array.fill(dcbias)  # create array of same size as trace data with dcbias as value
-        rectified = np.where(np.less(data, bias_array), 2 * bias_array - data, data)
-        ssum += sum(rectified)
-        npts += data.size
-    rsam = (ssum / npts) - dcbias
-    return [rsam, smax, smin, npts, dcbias]
 
 #===============================================================================
 # write - write RSAM to file
