@@ -206,6 +206,7 @@ def plot(infile, outdir=None):
     info=parse_filename(infile)
     for i in info:
         outfile+="%s_"%i
+    
 #     full_out=os.path.join(outdir,outfile+"plot.pdf")
 #     pdf=PdfPages(full_out)
 #     # create plots
