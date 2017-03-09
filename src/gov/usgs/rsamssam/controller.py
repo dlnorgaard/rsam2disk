@@ -139,6 +139,8 @@ class Controller(Thread):
     def process_one_min_data(self, station_id, station, network, location, channel, station_config):
         st=self.station_data[station_id]['start_time']
         et=st+60    # one min
+        if et > UTCDateTime().timestamp:    # if end time is after current time try again later
+            return
         
         # Check availability of data 
         response = self.client.get_availability(network, station, location, channel)
@@ -189,6 +191,9 @@ class Controller(Thread):
     def process_ten_min_data(self, station_id, station, network, location, channel, station_config):
         st=self.station_data[station_id]['start_time10']
         et=st+600    # ten min
+        if et > UTCDateTime().timestamp:    # if end time is after current time try again later
+            return
+        
         # Check availability of data 
         response = self.client.get_availability(network, station, location, channel)
         if(len(response)==0 or response[-1][5] < et):    # if available end time is before desired end time, wait a bit and then check again
