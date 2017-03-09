@@ -120,9 +120,12 @@ class MainUI():
             found=False
             for child in self.table.get_children():
                 if child==station_id:
-                    self.table.item(child, values=values)                
-                    found=True
-                    break
+                    try:
+                        self.table.item(child, values=values)                
+                        found=True
+                        break
+                    except Exception as err:
+                        print(err)  # may occur when switching servers
             if not found:
                 numitems=len(self.table.get_children())
                 if numitems%2==0:
@@ -257,7 +260,7 @@ class MainUI():
     # about
     #===============================================================================
     def about(self):
-        info="RSAM/SSAM 2/15/2017"
+        info="RSAM/SSAM 3/3/2017"
         info+="\ndnorgaard@usgs.gov"
         messagebox.showinfo("About", info)
         

@@ -24,7 +24,7 @@ def process(stream, station_id, et, config, station_data):
         data=np.append(data, tr.data)
         data=data[~np.isnan(data)]
     freq, specgram, time = spectrogram(data, stream[0].stats.sampling_rate)
-    ssam=calculate_custom(specgram, freq)
+    ssam=calculate_custom(specgram, freq, time)
     #ssam=calculate(specgram)
     missed=station_data['ssam_missed']
     station_data['ssam_missed']=write(ssam, station_id, et, config, missed)
@@ -42,26 +42,43 @@ def calculate(specgram):
 #===============================================================================
 # calculate SSAM values for given frequency bands. 
 #===============================================================================
-def calculate_custom(specgram, freq):  
+def calculate_custom(specgram, freq, time):  
     ssam=[]
     minf=0
     maxf=0
+#     print(len(specgram), len(freq), freq[0], freq[-1], freq[-2])
+#     print(specgram[0])
+#     print(specgram[1])
+#     print(specgram[-1])
     for i in range(0,len(bands)):
         b=bands[i]
+        #print("Band=",b)
         maxf=b  
         #print("Band=",b, minf, maxf)
         tempsum=0
         count=0
-        for j in range(0, len(freq)):
+        #print(len(freq), len(specgram), len(time))
+        for j in range(1, len(freq)):
             f=freq[j]
             if minf <= f and f < maxf:
-                favg = np.average(specgram[j])
+                #print(f,specgram[j-1])
+                favg = np.average(specgram[j-1])
                 tempsum += favg
                 count += 1
         v=tempsum/count
-        #print(i,b,tempsum/count, minf, maxf)
         ssam.append(v)
         minf=b 
+    # do one last SSAM calculations for upper end
+    tempsum=0
+    count=0
+    for j in range(1, len(freq)):
+        f=freq[j]
+        if minf <= f:
+            favg = np.average(specgram[j-1])
+            tempsum += favg
+            count += 1
+    v=tempsum/count
+    ssam.append(v)
     return ssam
     
             
@@ -84,8 +101,9 @@ def write(ssam, station_id, et, config, missed):
         if config.print_data or config.print_debug:
             print(station_id+"     "+text)
         f.close() 
-    except Exception:
-        return text + "\n"  
+    except Exception as err:
+        print(err)
+        #return text + "\n"  
     return ""  
 
 #===============================================================================
@@ -166,7 +184,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False, dbscale=Fals
     #specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft, 
     #                                     pad_to=mult, noverlap=nlap, detrend='linear')
     nfft=1024
-    specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft, detrend='linear', mode='psd') 
+    specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft, scale_by_freq=False, detrend='linear', mode='psd') 
 
     # db scale and remove zero/offset for amplitude
     if dbscale:
