@@ -88,7 +88,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False, dbscale=Fals
     #specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft, 
     #                                      pad_to=mult, noverlap=nlap, detrend='linear', mode='psd')
     nfft=1024
-    specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft, detrend='linear', mode='psd')
+    specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft, scale_by_freq=False, detrend='linear', mode='psd')
     
     
 
@@ -147,14 +147,14 @@ from obspy.core.utcdatetime import UTCDateTime
 import os, time
 now = UTCDateTime()
 et = now - (now.timestamp % 60) 
-st = et - 60
+st = et - 80
 network="UW"
-station="FMW"
+station="RER"
 channel="EHZ"
 location=""
 filename_format="%s_%d%02d%02d_%s_%d.dat"
 date_format="%d-%b-%Y %H:%M"
-subdir="E:\Data\SSAM2017\Test"
+subdir="D:\Data\SSAM2017\Test"
 client=Client("127.0.0.1", 16030)  
 while True:   
     response = client.get_availability(network, station, location, channel)
@@ -183,15 +183,15 @@ while True:
     #print(time)
     ssam=calculate_custom(freq, time, specgram)
     
-    filename = filename_format%("SSAMTEST", et.year, et.month, et.day, station, 60)
-    full_filename = os.path.join(subdir, filename)
-    f = open(full_filename,"a")
+    #filename = filename_format%("SSAMTEST", et.year, et.month, et.day, station, 60)
+    #full_filename = os.path.join(subdir, filename)
+    #f = open(full_filename,"a")
     text=et.strftime(date_format)
     for v in ssam:
         text += " %05d"%v
-    f.write(text+"\n")
+    #f.write(text+"\n")
     print(text)
-    f.close() 
+    #f.close() 
     
     st += 60
     et += 60

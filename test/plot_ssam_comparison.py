@@ -32,9 +32,9 @@ def parse_filename(filename):
 
 # TODO: Account for changes in month/year below
 # Update dates (d) and station list as needed.
-for d in [ "25", "26", "27"]:
+for d in [ "10","11","12" ]:
     for station in ["RER","STAR","FMW","RCS"]: 
-        recdate=d+"-FEB-2017"
+        recdate=d+"-MAR-2017"
         if station=="OBSR":
             network="CC"
             channel="BHZ"
@@ -45,8 +45,8 @@ for d in [ "25", "26", "27"]:
             station2=station+"_"
         else:
             station2=station
-        oldrsam="D:\Data\SSAM\\16channel\\"+station2+"\\201702"+d+"_"+station+"_"+channel+"_"+network+".DAT"
-        newrsam="D:\Data\SSAM2017\\60\SSAM_201702"+d+"_"+station+"_"+channel+"_"+network+"__60.dat"
+        oldrsam="D:\Data\SSAM\\16channel\\"+station2+"\\201703"+d+"_"+station+"_"+channel+"_"+network+".DAT"
+        newrsam="D:\Data\SSAM2017\\60\SSAM_201703"+d+"_"+station+"_"+channel+"_"+network+"__60.dat"
         outdir="D:\\Data\SSAM2017\Comparison\\" + station
         os.makedirs(outdir, exist_ok=True)
         fold=open(oldrsam)
@@ -79,14 +79,35 @@ for d in [ "25", "26", "27"]:
                 newdata.append(numdata)
         fnew.close()
         #print(newdata)
-        
+
+            
         # Rotate data -90 degrees and flip along x-axis
+        #print(olddata)
+        #print("Old data len: ",len(olddata))
+        #print("New data len: ",len(newdata))
         olddata=np.rot90(olddata, -1)
         olddata=np.fliplr(olddata)
         newdata=np.rot90(newdata, -1)
         newdata=np.fliplr(newdata)
-        print("Old data len: ",len(olddata))
-        print("New data len: ",len(newdata))
+        #print("Old data len: ",len(olddata))
+        #print("New data len: ",len(newdata))
+                
+        # remove time/data from old output where corresponding data does not exist for new output (e.g. due to tank gaps)
+        remove_list=[]
+        for i in range(0,len(oldtime)):
+            t=oldtime[i]
+            if t not in newtime:
+                remove_list.append(i)
+        #print(remove_list)
+        oldtime=np.delete(oldtime, remove_list)
+        temp=[]
+        for i in range(0,len(olddata)):
+            #print(len(olddata[i]))
+            #olddata[i].resize(len(oldtime))
+            #print(len(np.delete(olddata[i], remove_list)))
+            temp.append(np.delete(olddata[i], remove_list))
+            #print(len(olddata[i])) 
+        olddata=temp
         
         # get file info and create output file name
         outfile=""
@@ -111,8 +132,11 @@ for d in [ "25", "26", "27"]:
         
         # Scatter plot
         for i in range(0,len(newdata)):
+            #print("i=",i)
             x=olddata[i]
             y=newdata[i]
+            #print(len(x))
+            #print(len(y))
             m, b = np.polyfit(x, y, 1)
             plt.plot(x, m*x+b,"r")
             plt.plot(x, y, '.')
@@ -129,7 +153,7 @@ for d in [ "25", "26", "27"]:
         # Line plot
         for i in range(0,len(newdata)):
             plt.figure(figsize=(24,12))
-            plt.plot(oldtime, olddata[i], newtime, newdata[i])
+            plt.plot(oldtime, olddata[i], 'r--',newtime, newdata[i],'b--')
             plt.ylabel("SSAM")
             plt.xlabel("Time")
             plt.title("%s%03d"%(outfile,i))
