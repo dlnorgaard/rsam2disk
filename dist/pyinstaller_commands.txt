@@ -1,0 +1,3 @@
+OSX:
+
+pyinstaller --onefile /Users/dnorgaard/git/RsamSsam/src/main.py --distpath /Users/dnorgaard/git/RsamSsam/dist/osx/
