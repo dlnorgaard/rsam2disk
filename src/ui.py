@@ -266,7 +266,7 @@ class MainUI():
     # about
     #===============================================================================
     def about(self):
-        info="RSAM/SSAM 2/15/2017"
+        info="RSAM/SSAM 3/16/2017"
         info+="\ndnorgaard@usgs.gov"
         messagebox.showinfo("About", info)
         
