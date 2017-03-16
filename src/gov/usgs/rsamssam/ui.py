@@ -9,6 +9,7 @@ from tkinter import messagebox
 from tkinter import filedialog
 from PIL import Image, ImageTk
 import os
+from query_window import QueryWindow
 
 #===============================================================================
 # MainUI
@@ -317,16 +318,20 @@ class MainUI():
     # plot
     #===========================================================================
     def plot(self, station_id, spectrogram=False):
-        if not station_id in self.config.controller.station_data:
+        if station_id not in self.config.stations:  # Not configured to get data
+            message="Station is not configured to collect one minute data."
+            messagebox.showwarning(station_id, message)
+#         if not station_id in self.config.controller.station_data:
+#             message="Station is not configured to collect one minute data."
+#             messagebox.showwarning(station_id, message)
+        if self.config.controller.station_data[station_id]['onemin']==self.config.CHECKMARK:   # Don't have one minute data yet
+            message="One minute data for the station is not yet available."
+            messagebox.showwarning(station_id, message)
             return
         plot_stream=self.config.controller.station_data[station_id]['plot_stream']
         if len(plot_stream)==0:
             return
         stream = plot_stream[0] # only do 1 min for now
-#         if len(plot_stream) > 1:
-#             for i in range(1,len(plot_stream)-1):
-#                 stream += plot_stream[i]
-#        stream.merge(method=1) 
         filename=station_id+".png"            
         filename=filename.replace(":","_")
         filename=os.path.join(self.config.rsam_directory,filename)
@@ -349,7 +354,12 @@ class MainUI():
         if os.path.isfile(filename):
             os.remove(filename)
         
-
+    #===========================================================================
+    # open_query_window
+    #===========================================================================
+    def open_query_window(self, config, station_id, st, et):
+        QueryWindow(config, station_id, st, et)      
+        
     #===========================================================================
     # on_righ_click - Open right click menu
     #===========================================================================
@@ -357,11 +367,12 @@ class MainUI():
         station_id = self.table.identify_row(event.y)
         if station_id == "":        # Not clicked on a station
             return
-        if station_id not in self.config.stations:  # Not configured to get data
-            return
-        if self.config.controller.station_data[station_id]['onemin']==self.config.CHECKMARK:   # Don't have one minute data yet
-            return        
+        item=self.table.item(station_id)   
+        #print(item)
+        st=item['values'][1]
+        et=item['values'][2]
         popup=tk.Menu(self.root, tearoff=0)
+        popup.add_command(label="Query Custom Time Range", command=lambda x=self.config:self.open_query_window(x,station_id, st, et))
         popup.add_command(label="Plot Waveform", command=lambda x=station_id:self.plot(x, spectrogram=False))
         popup.add_command(label="Plot Spectrogram", command=lambda x=station_id:self.plot(x, spectrogram=True))
         popup.post(event.x_root, event.y_root)

@@ -11,6 +11,8 @@ from obspy.clients.earthworm import Client
 from obspy.core import UTCDateTime
 from tkinter import messagebox
 from threading import Thread
+import logging
+
 #===============================================================================
 # Controller
 #===============================================================================
@@ -64,13 +66,14 @@ class Controller(Thread):
     #===============================================================================            
     def create_station_data(self, station_id): 
         # get station data
-        data=station_id.split(":")
-        station = data[0]
-        channel = data[1]
-        network = data[2]
-        location = ""
-        if len(data) > 3:
-            location=data[3]
+#         data=station_id.split(":")
+#         station = data[0]
+#         channel = data[1]
+#         network = data[2]
+#         location = ""
+#         if len(data) > 3:
+#             location=data[3]
+        station, channel, network, location=self.config.parse_station_id(station_id)
         
         # set initial start time
         now = UTCDateTime()
@@ -150,7 +153,8 @@ class Controller(Thread):
         # Get station data from Wave Server
         stream = self.client.get_waveforms(network, station, location, channel, st, et) 
         if len(stream)==0 or stream[0].stats.npts==0:        # No data (e.g. tank gap, etc.)
-            print(network, station, channel, st, et, " Missing data (tank gap?)")
+            message="%s %s %s %s %s %s %s"%(self.network, self.station, self.channel, self.location, st, et, " Missing data (tank gap?)")
+            logging.warning(message)
             # update start time and end time
             self.station_data[station_id]['start_time']=et  
             return
@@ -159,22 +163,21 @@ class Controller(Thread):
             print(stream) 
             
         # 1 min RSAM
-        if station_config[0]==1:      
-            if self.config.print_debug:
-                print(station_id, "Calculating 1 Min RSAM")
-            self.station_data[station_id]=rsam.process(stream, station_id, et, 60, self.config, self.station_data[station_id]) 
+        if station_config[0]==1:               
+            data=rsam.calculate(stream)     
+            self.station_data[station_id]['onemin']="%d"%data[0]  
+            self.station_data[station_id]['onemin_missed']=rsam.write(data, station_id, et, 60, self.config, self.station_data[station_id]['onemin_missed']) 
         # 1 min SSAM
         if station_config[2]==1: 
-            if self.config.print_debug:
-                print(station_id, "Calculating 1 Min SSAM")     
-            self.station_data[station_id]=ssam.process(stream, station_id, et, self.config, self.station_data[station_id]) 
+            data=ssam.calculate(stream)
+            self.station_data[station_id]['ssam_missed']=ssam.write(data, station_id, et, self.config, self.station_data[station_id]['ssam_missed'])
          
         # update start time and end time
         self.station_data[station_id]['start_time']=et    
         
         # For successful inventory query, reduce failed connection
         if self.fails > 0:
-            self.fails -= 1    
+            self.fails -= 1  
               
         # add to stream list for plotting
         plot_stream=self.station_data[station_id]['plot_stream']
@@ -201,17 +204,18 @@ class Controller(Thread):
         # Get station data from Wave Server
         stream = self.client.get_waveforms(network, station, location, channel, st, et) 
         if len(stream)==0 or stream[0].stats.npts==0:        # No data (e.g. tank gap, etc.)
-            print(network, station, channel, st, et, " Missing data (tank gap?)")
+            message=network, station, channel, self.location, st, et, " Missing data (tank gap?)"
+            logging.warning(message)
             # update start time and end time
             self.station_data[station_id]['start_time10']=et  
             return
         if self.config.print_stream:
             print(stream) 
 
-        # 10 min RSAM
-        if self.config.print_debug:
-            print(station_id, "Calculating 10 Min RSAM")   
-        self.station_data[station_id]=rsam.process(stream, station_id, et, 600, self.config, self.station_data[station_id]) 
+        # 10 min RSAM        
+        data=rsam.calculate(stream)       
+        self.station_data[station_id]['tenmin']="%d"%data[0]  
+        self.station_data[station_id]['tenmin_missed']=rsam.write(data, station_id, et, 600, self.config, self.station_data[station_id]['tenmin_missed'])
 
         # update start time and end time
         self.station_data[station_id]['start_time10']=et  

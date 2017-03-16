@@ -17,32 +17,38 @@ bands=[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 8, 10, 15, 20 ]
 #===============================================================================
 # process - calculate SSAM and write to file
 #===============================================================================
-def process(stream, station_id, et, config, station_data):  
-    #stream.merge(method=1)  
+# def process(stream, station_id, et, config, station_data):  
+#     #stream.merge(method=1)  
+#     data=np.array([])  
+#     for tr in stream:
+#         data=np.append(data, tr.data)
+#         data=data[~np.isnan(data)]
+#     freq, specgram, time = spectrogram(data, stream[0].stats.sampling_rate)
+#     ssam=calculate_custom(specgram, freq, time)
+#     #ssam=calculate(specgram)
+#     missed=station_data['ssam_missed']
+#     station_data['ssam_missed']=write(ssam, station_id, et, config, missed)
+#     return station_data  
+
+# #===============================================================================
+# # calculate
+# #===============================================================================
+# def calculate(specgram):
+#     ssam=[]
+#     for spec in specgram:
+#         ssam.append(np.average(spec))
+#     return ssam
+
+#===============================================================================
+# calculate SSAM values for given frequency bands. 
+#===============================================================================
+def calculate(stream):  
     data=np.array([])  
     for tr in stream:
         data=np.append(data, tr.data)
         data=data[~np.isnan(data)]
     freq, specgram, time = spectrogram(data, stream[0].stats.sampling_rate)
-    ssam=calculate_custom(specgram, freq, time)
-    #ssam=calculate(specgram)
-    missed=station_data['ssam_missed']
-    station_data['ssam_missed']=write(ssam, station_id, et, config, missed)
-    return station_data  
-
-#===============================================================================
-# calculate
-#===============================================================================
-def calculate(specgram):
-    ssam=[]
-    for spec in specgram:
-        ssam.append(np.average(spec))
-    return ssam
-
-#===============================================================================
-# calculate SSAM values for given frequency bands. 
-#===============================================================================
-def calculate_custom(specgram, freq, time):  
+    
     ssam=[]
     minf=0
     maxf=0
@@ -85,7 +91,7 @@ def calculate_custom(specgram, freq, time):
 #===============================================================================
 # write - write SSAM to file
 #===============================================================================
-def write(ssam, station_id, et, config, missed):
+def write(ssam, station_id, et, config, missed, dirname=None):
     text=missed+et.strftime(date_format)
     for v in ssam:
         text += " %05d"%v
@@ -93,9 +99,10 @@ def write(ssam, station_id, et, config, missed):
         print(station_id+"     "+text)
     try:
         station=station_id.replace(":","_")
+        if dirname==None:
+            dirname=os.path.join(config.ssam_directory, str(60))
         filename = filename_format%("SSAM", et.year, et.month, et.day, station, 60)
-        subdir=os.path.join(config.ssam_directory, str(60))
-        full_filename = os.path.join(subdir, filename)
+        full_filename = os.path.join(dirname, filename)
         f = open(full_filename,"a")
         f.write(text+"\n")
         if config.print_data or config.print_debug:
@@ -224,19 +231,6 @@ def plot(infile, outdir=None):
     info=parse_filename(infile)
     for i in info:
         outfile+="%s_"%i
-#     full_out=os.path.join(outdir,outfile+"plot.pdf")
-#     pdf=PdfPages(full_out)
-#     # create plots
-#     for i in range(0,len(data)):
-#         #plt.figure(figsize=(13,11))
-#         plt.plot(time, data[i])
-#         plt.ylabel("SSAM")
-#         plt.xlabel("Time")
-#         plt.title("%s%03d"%(outfile,i))
-#         plt.savefig(pdf,format='pdf')
-#         pdf.savefig()
-#         plt.close()
-#     print("Created "+full_out)
         
     for i in range(0,len(data)):
         plt.figure(figsize=(24,6))
