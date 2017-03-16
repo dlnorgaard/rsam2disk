@@ -231,23 +231,6 @@ def plot(infile, outdir=None):
     info=parse_filename(infile)
     for i in info:
         outfile+="%s_"%i
-<<<<<<< HEAD
-=======
-    
-#     full_out=os.path.join(outdir,outfile+"plot.pdf")
-#     pdf=PdfPages(full_out)
-#     # create plots
-#     for i in range(0,len(data)):
-#         #plt.figure(figsize=(13,11))
-#         plt.plot(time, data[i])
-#         plt.ylabel("SSAM")
-#         plt.xlabel("Time")
-#         plt.title("%s%03d"%(outfile,i))
-#         plt.savefig(pdf,format='pdf')
-#         pdf.savefig()
-#         plt.close()
-#     print("Created "+full_out)
->>>>>>> branch 'master' of https://github.com/dnorgaard-usgs/RsamSsam.git
         
     for i in range(0,len(data)):
         plt.figure(figsize=(24,6))
