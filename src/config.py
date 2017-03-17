@@ -1,17 +1,19 @@
 '''
 Created on Jan 24, 2017
-
 This module reads and stores configuration information for the package.
-
 @author: dnorgaard
 '''
 import json
+import logging
+import sys, os
 from copy import deepcopy
 from tkinter import messagebox
 
+#===============================================================================
+# Config
+#===============================================================================
 class Config(object):    
     
-       
     CHECKMARK=u'\u2713'                 # Unicode character for check mark    
     name="RSAM/SSAM"
     
@@ -39,9 +41,10 @@ class Config(object):
     secondary_server="pubavo1.wr.usgs.gov"
     secondary_port=16022
     
-    # Output directories
+    # Output directories and filenames
     rsam_directory="E:\\Data\RSAM2017"
     ssam_directory="E:\\Data\SSAM2017"
+    log_file="E:\\Data\logs\RsamSsam.log"
         
     # Limits inventory to check for and display in UI.
     # network, station, channel, location
@@ -70,7 +73,7 @@ class Config(object):
     #===========================================================================
     def __init__(self, filename):
         self.load(filename)
-        print("Configuration initialized")
+        logging.info("Configuration initialized")
 
             
     #===========================================================================
@@ -81,6 +84,14 @@ class Config(object):
             self.filename=filename
             with open(filename) as json_data_file:
                 data = json.load(json_data_file)
+            self.log_file=data['log_file']
+            if self.log_file=='':
+                print('Please configure log_directory in '+filename)
+                raise Exception("Missing configuration: log_directory")
+            print("Logfile=",self.log_file)
+            log_dir=os.path.dirname(self.log_file)
+            os.makedirs(log_dir, exist_ok=True)
+            logging.basicConfig(filename=self.log_file,level=logging.DEBUG)
             self.primary_server=data['primary_server']
             self.primary_port=data['primary_port']
             self.secondary_server=data['secondary_server']
@@ -91,28 +102,22 @@ class Config(object):
                 self.inventory_filter=data['inventory_filter']
             self.stations=data['stations']
             self.temp_stations=deepcopy(self.stations)
-            #print(self)
-    #         except FileNotFoundError:
-    #             message=""
-    #             if filename=="":
-    #                 message="**No configuration filename specified."
-    #             else:
-    #                 message="**File not found: "+filename
-    #             message+="\n**Using previous or system default configurations.\n**You may create a new configuration through the application."
-    #             print(message)
-            print("Loaded new configuration file "+ filename)
-            return True
+            logging.info("Loaded new configuration file "+ filename)
         except json.decoder.JSONDecodeError:
             message= "ERROR: Improperly formatted configuration file: "+ filename
+            logging.error(message)
             print(message)
-            return False
+            raise
         except KeyError as err:
             message= "ERROR: Missing configuration - "
             print(message, err)
-            return False
+            logging.exception(message)
+            raise err
         except Exception as err:
-            print(err)
-            return False
+            print("Unexpected error: ", sys.exc_info()[0])
+            logging.exception("Unexpected error: ")
+            raise
+        
             
             
                     
@@ -128,10 +133,11 @@ class Config(object):
             messagebox.showinfo("Configuration",message)
             self.filename=filename
         except Exception as err:
-            print(err)
+            logging.error(err)
             message="Unable to write to "+filename 
             message+="\nConfiguration not saved."
             messagebox.showinfo("Configuration",message)
+            logging.error(message)
             
     #===========================================================================
     # __str__
@@ -144,6 +150,7 @@ class Config(object):
             'secondary_port': self.secondary_port,
             'rsam_directory': self.rsam_directory,
             'ssam_directory': self.ssam_directory,
+            'log_file': self.log_file,
             'inventory_filter': self.inventory_filter,
             'stations': self.stations
             }
@@ -157,9 +164,23 @@ class Config(object):
         text+="\nSecondary Server="+self.secondary_server+":"+str(self.secondary_port)
         text+="\nRSAM output directory="+self.rsam_directory
         text+="\nSSAM output directory="+self.ssam_directory
+        text+="\nLog file="+self.log_file
         text+="\nInventory filter="+str(self.inventory_filter)
         text+="\nStation Settings={"
         for s in self.stations:
             text+="\n  "+str(s)+" "+str(self.stations[s])
         text+="\n}"
         return text
+    
+    #===========================================================================
+    # parse_station_id
+    #===========================================================================
+    def parse_station_id(self, station_id):
+        data=station_id.split(":")
+        station = data[0]
+        channel = data[1]
+        network = data[2]
+        location = ""
+        if len(data) > 3:
+            location=data[3]
+        return station, channel, network, location
