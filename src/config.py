@@ -35,16 +35,16 @@ class Config(object):
     
     # WaveServer configurations 
     primary=True    # set to False when switching to secondary server
-    primary_server="127.0.0.1"
+    primary_server="pubavo1.wr.usgs.gov"
     primary_port=16022
     
-    secondary_server="pubavo1.wr.usgs.gov"
+    secondary_server="127.0.0.1"
     secondary_port=16022
     
     # Output directories and filenames
-    rsam_directory="RSAM"
-    ssam_directory="SSAM"
-    log_file="RsamSsam.log"
+    rsam_directory="data/RSAM"
+    ssam_directory="data/SSAM"
+    log_file="./RsamSsam.log"
         
     # Limits inventory to check for and display in UI.
     # network, station, channel, location
@@ -90,7 +90,8 @@ class Config(object):
                 raise Exception("Missing configuration: log_directory")
             print("Logfile=",self.log_file)
             log_dir=os.path.dirname(self.log_file)
-            os.makedirs(log_dir, exist_ok=True)
+            if log_dir != "":
+                os.makedirs(log_dir, exist_ok=True)
             logging.basicConfig(filename=self.log_file,level=logging.DEBUG)
             self.primary_server=data['primary_server']
             self.primary_port=data['primary_port']
