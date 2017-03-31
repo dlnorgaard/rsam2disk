@@ -105,6 +105,8 @@ class MainUI():
     def update_table(self):
         #print("updating table")
         inventory=self.config.controller.get_inventory()
+        if inventory is None:
+            return
         for inv in inventory:
             network=inv[0]
             station=inv[1]

@@ -8,7 +8,7 @@ import logging
 import sys, os
 from copy import deepcopy
 from tkinter import messagebox
-
+from config_ui import ConfigUI
 #===============================================================================
 # Config
 #===============================================================================
@@ -18,7 +18,7 @@ class Config(object):
     name="RSAM/SSAM"
     
     # Configuration filename on load or save
-    filename=""
+    filename='default-config.json'
     
     rsam_time_frames=[60, 600]
     ssam_time_frames=[60]
@@ -36,15 +36,15 @@ class Config(object):
     # WaveServer configurations 
     primary=True    # set to False when switching to secondary server
     primary_server="127.0.0.1"
-    primary_port=16030
+    primary_port=16022
     
     secondary_server="pubavo1.wr.usgs.gov"
     secondary_port=16022
     
     # Output directories and filenames
-    rsam_directory="E:\\Data\RSAM2017"
-    ssam_directory="E:\\Data\SSAM2017"
-    log_file="E:\\Data\logs\RsamSsam.log"
+    rsam_directory="RSAM"
+    ssam_directory="SSAM"
+    log_file="RsamSsam.log"
         
     # Limits inventory to check for and display in UI.
     # network, station, channel, location
@@ -71,8 +71,8 @@ class Config(object):
     #===========================================================================
     # __init__
     #===========================================================================
-    def __init__(self, filename):
-        self.load(filename)
+    def __init__(self):
+        self.load(self.filename)
         logging.info("Configuration initialized")
 
             
@@ -107,20 +107,20 @@ class Config(object):
             message= "ERROR: Improperly formatted configuration file: "+ filename
             logging.error(message)
             print(message)
-            raise
+            ConfigUI(self);
         except KeyError as err:
             message= "ERROR: Missing configuration - "
             print(message, err)
             logging.exception(message)
-            raise err
+            ConfigUI(self);
+        except FileNotFoundError:
+            print("default-config.json does not exist. Opening configuration manager.")
+            ConfigUI(self);
         except Exception as err:
             print("Unexpected error: ", sys.exc_info()[0])
             logging.exception("Unexpected error: ")
-            raise
-        
-            
-            
-                    
+            raise      
+                   
     #===========================================================================
     # write
     #===========================================================================

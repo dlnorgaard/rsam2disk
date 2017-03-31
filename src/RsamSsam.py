@@ -8,7 +8,7 @@ from ui import MainUI
 from controller import Controller
 from config import Config
       
-config=Config('default-config.json') 
+config=Config() 
 # set up UI
 ui=MainUI(config)             
 config.ui=ui
