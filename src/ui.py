@@ -8,7 +8,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 from PIL import Image, ImageTk
-import os
+import os, sys, platform
 from query_window import QueryWindow
 
 #===============================================================================
@@ -63,6 +63,7 @@ class MainUI():
     def create_table(self):
         self.table=ttk.Treeview(self.root)
         self.table.bind("<Button-1>",self.on_click)         # single left click
+        self.table.bind("<Button-2>", self.on_right_click)  # right click
         self.table.bind("<Button-3>", self.on_right_click)  # right click
         self.table.bind("<<Refresh>>", self.update_table)
         self.table['show']='headings'
@@ -321,6 +322,7 @@ class MainUI():
         if messagebox.askokcancel("Exit", "Are you sure you want to exit?"):
             self.config.runFlag=False
             self.root.destroy()
+            sys.exit()
             
     #===========================================================================
     # plot

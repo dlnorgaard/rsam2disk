@@ -92,7 +92,9 @@ def calculate_dcbias(stream):
 #===============================================================================
 # write - write RSAM to file
 #===============================================================================
-def write(data, station_id, et, duration, config, missed):  
+def write(data, station_id, et, duration, config, missed, dirname=None):  
+    if dirname==None:
+        dirname=config.rsam_directory
     # date/time, rsam, max, min, npts, dcbias
     text=missed+"%s, %06d, %06d, %06d, %d, %d"%(et.strftime(date_format), data[0], data[1], data[2], data[3], data[4])
     if config.print_data or config.print_debug:
@@ -100,7 +102,7 @@ def write(data, station_id, et, duration, config, missed):
     try: 
         station=station_id.replace(":","_")
         filename = filename_format%("RSAM", et.year, et.month, et.day, station, duration)
-        subdir=os.path.join(config.rsam_directory, str(duration))
+        subdir=os.path.join(dirname, str(duration))
         full_filename = os.path.join(subdir, filename)
         f = open(full_filename,"a")
         f.write(text+"\n")

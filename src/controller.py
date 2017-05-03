@@ -128,7 +128,7 @@ class Controller(Thread):
                 # Update station list
                 self.config.stations=deepcopy(self.config.temp_stations)
                 time.sleep(2)
-            except (ConnectionError, ConnectionRefusedError, TimeoutError) as err:  
+            except (ConnectionError, ConnectionRefusedError, TimeoutError, OSError) as err:  
                 self.handle_connection_error(err)         
              
     
