@@ -70,7 +70,7 @@ def calculate_custom(specgram, freq):
 #===============================================================================
 # write - write SSAM to file
 #===============================================================================
-def write(ssam, station_id, et, config, missed):
+def write(ssam, station_id, et, config, missed, dirname=None):
     text=missed+et.strftime(date_format)
     for v in ssam:
         text += " %05d"%v
@@ -79,8 +79,9 @@ def write(ssam, station_id, et, config, missed):
     try:
         station=station_id.replace(":","_")
         filename = filename_format%("SSAM", et.year, et.month, et.day, station, 60)
-        subdir=os.path.join(config.ssam_directory, str(60))
-        full_filename = os.path.join(subdir, filename)
+        if dirname==None:
+            dirname=config.ssam_directory
+        full_filename = os.path.join(dirname, filename)
         f = open(full_filename,"a")
         f.write(text+"\n")
         if config.print_data or config.print_debug:

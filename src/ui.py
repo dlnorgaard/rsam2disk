@@ -8,7 +8,7 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 from PIL import Image, ImageTk
-import os, sys, platform
+import os, sys
 from query_window import QueryWindow
 
 #===============================================================================
@@ -329,11 +329,9 @@ class MainUI():
     #===========================================================================
     def plot(self, station_id, spectrogram=False):
         if station_id not in self.config.stations:  # Not configured to get data
-            message="Station is not configured to collect one minute data."
+            message="Station must first be configured to collect one minute data."
             messagebox.showwarning(station_id, message)
-#         if not station_id in self.config.controller.station_data:
-#             message="Station is not configured to collect one minute data."
-#             messagebox.showwarning(station_id, message)
+            return
         if self.config.controller.station_data[station_id]['onemin']==self.config.CHECKMARK:   # Don't have one minute data yet
             message="One minute data for the station is not yet available."
             messagebox.showwarning(station_id, message)

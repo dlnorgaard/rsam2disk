@@ -18,7 +18,6 @@ class QueryWindow(object):
     dateformat="YYYY-mm-dd HH:MM"
     onvalue='on'
     offvalue='off'
-    dirname=""
     fails=0                             # Keeps track of failed connections.
     retry=10                            # Number of retries after failed connections.
     
@@ -86,7 +85,7 @@ class QueryWindow(object):
     # open_dir_chooser
     #===========================================================================
     def open_dir_chooser(self):
-        dirname=filedialog.askdirectory(initialdir=".", title="Select file", mustexist=True )
+        dirname=filedialog.askdirectory(initialdir=".", title="Select Directory", mustexist=True )
         if dirname:
             self.dirname.set(dirname)
         
@@ -159,7 +158,7 @@ class QueryWindow(object):
                 if self.fails > 0:
                     self.fails -= 1  
                     
-        # one min
+        # ten min
         st=start_time + (start_time.timestamp%600)
         if self.rsam600.get()=='on':
             missed_rsam_600=""
