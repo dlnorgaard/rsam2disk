@@ -7,8 +7,11 @@ Created on Feb 7, 2017
 from ui import MainUI
 from controller import Controller
 from config import Config
-      
+import sys
+
 config=Config() 
+if not config.loaded:
+    sys.exit()
 # set up UI
 ui=MainUI(config)             
 config.ui=ui

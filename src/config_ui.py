@@ -7,6 +7,7 @@ Created on Mar 31, 2017
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
+import sys
 
 class ConfigUI(object):
     '''
@@ -27,6 +28,7 @@ class ConfigUI(object):
     def create_ui(self):
         root=tk.Tk()
         root.withdraw()
+        #root.protocol("WM_DELETE_WINDOW", sys.exit())
         win=tk.Toplevel(master=root)
         win.title("Configuration Manager")
         
@@ -98,5 +100,6 @@ class ConfigUI(object):
         self.config.rsam_directory=self.rsam_directory.get()
         self.config.ssam_directory=self.ssam_directory.get()
         self.config.write(self.config.filename)
+        self.config.loaded=True
         self.win.destroy()
-        
+                    
