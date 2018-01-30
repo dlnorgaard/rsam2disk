@@ -13,7 +13,7 @@ from config_ui import ConfigUI
 # Config
 #===============================================================================
 class Config(object):    
-    
+    loaded=False
     CHECKMARK=u'\u2713'                 # Unicode character for check mark    
     name="RSAM/SSAM"
     
@@ -51,7 +51,7 @@ class Config(object):
     inventory_filter={
                     'network':'*',
                     'station':'*',
-                    'channel':'*Z',
+                    'channel':'EHZ',
                     'location':'*'
                 }
     
@@ -103,6 +103,7 @@ class Config(object):
                 self.inventory_filter=data['inventory_filter']
             self.stations=data['stations']
             self.temp_stations=deepcopy(self.stations)
+            self.loaded=True
             logging.info("Loaded new configuration file "+ filename)
         except json.decoder.JSONDecodeError:
             message= "ERROR: Improperly formatted configuration file: "+ filename
