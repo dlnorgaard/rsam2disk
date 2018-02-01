@@ -37,7 +37,7 @@ class Config(object):
     
     # WaveServer configurations 
     primary=True    # set to False when switching to secondary server
-    primary_server="pubavo1.wr.usgs.gov"
+    primary_server="127.0.0.1"
     primary_port=16022
     
     secondary_server="127.0.0.1"
