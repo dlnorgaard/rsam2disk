@@ -165,7 +165,7 @@ class Controller(Thread):
             self.station_data[station_id]['onemin_missed']=rsam.write(data, station_id, et, 60, self.config, self.station_data[station_id]['onemin_missed']) 
         # 1 min SSAM
         if station_config[2]==1: 
-            data=ssam.calculate(stream)
+            data=ssam.calculate(stream, self.config.ssam_bands)
             self.station_data[station_id]['ssam_missed']=ssam.write(data, station_id, et, self.config, self.station_data[station_id]['ssam_missed'])
          
         # update start time and end time

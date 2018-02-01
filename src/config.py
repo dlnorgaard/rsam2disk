@@ -23,6 +23,8 @@ class Config(object):
     rsam_time_frames=[60, 600]
     ssam_time_frames=[60]
     
+    ssam_bands=[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 8, 10, 15, 20 ]
+
     ui=None
     controller=None
     
@@ -99,6 +101,7 @@ class Config(object):
             self.secondary_port=data['secondary_port']
             self.rsam_directory=data['rsam_directory']
             self.ssam_directory=data['ssam_directory']
+            self.ssam_bands=data['ssam_bands']
             if bool(data['inventory_filter']):
                 self.inventory_filter=data['inventory_filter']
             self.stations=data['stations']
@@ -152,6 +155,7 @@ class Config(object):
             'secondary_port': self.secondary_port,
             'rsam_directory': self.rsam_directory,
             'ssam_directory': self.ssam_directory,
+            'ssam_bands': self.ssam_bands,
             'log_file': self.log_file,
             'inventory_filter': self.inventory_filter,
             'stations': self.stations
@@ -166,6 +170,7 @@ class Config(object):
         text+="\nSecondary Server="+self.secondary_server+":"+str(self.secondary_port)
         text+="\nRSAM output directory="+self.rsam_directory
         text+="\nSSAM output directory="+self.ssam_directory
+        text+="\nSSAM bands="+str(self.ssam_bands)
         text+="\nLog file="+self.log_file
         text+="\nInventory filter="+str(self.inventory_filter)
         text+="\nStation Settings={"

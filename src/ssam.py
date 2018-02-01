@@ -14,37 +14,17 @@ import matplotlib.pyplot as plt
 
 filename_format="%s_%d%02d%02d_%s_%d.dat"
 date_format="%d-%b-%Y %H:%M"
-bands=[0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 8, 10, 15, 20 ]
 
 #===============================================================================
-# process - calculate SSAM and write to file
+# calculate SSAM values for given frequency bands. 
 #===============================================================================
-def process(stream, station_id, et, config, station_data):  
-    #stream.merge(method=1)  
+def calculate(stream, bands):  
     data=np.array([])  
     for tr in stream:
         data=np.append(data, tr.data)
         data=data[~np.isnan(data)]
     freq, specgram, time = spectrogram(data, stream[0].stats.sampling_rate)
-    ssam=calculate_custom(specgram, freq)
-    #ssam=calculate(specgram)
-    missed=station_data['ssam_missed']
-    station_data['ssam_missed']=write(ssam, station_id, et, config, missed)
-    return station_data  
-
-#===============================================================================
-# calculate
-#===============================================================================
-def calculate(specgram):
-    ssam=[]
-    for spec in specgram:
-        ssam.append(np.average(spec))
-    return ssam
-
-#===============================================================================
-# calculate SSAM values for given frequency bands. 
-#===============================================================================
-def calculate_custom(specgram, freq):  
+    
     ssam=[]
     minf=0
     maxf=0
@@ -80,12 +60,10 @@ def write(ssam, station_id, et, config, missed, dirname=None):
         station=station_id.replace(":","_")
         filename = filename_format%("SSAM", et.year, et.month, et.day, station, 60)
         if dirname==None:
-            dirname=config.ssam_directory
+            dirname=config.ssam_directory+"/60"
         full_filename = os.path.join(dirname, filename)
         f = open(full_filename,"a")
         f.write(text+"\n")
-        if config.print_data or config.print_debug:
-            print(station_id+"     "+text)
         f.close() 
     except Exception:
         return text + "\n"  

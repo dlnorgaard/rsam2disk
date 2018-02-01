@@ -13,21 +13,23 @@ date_format="%d-%b-%Y %H:%M:%S"
 # process- Calculate RSAM and write to file.  Return updated station data
 #            if successful.
 #===============================================================================
-def process(stream, station_id, et, duration, config, station_data):
-    data=calculate(stream)       
-    missed=''
-    if duration==60:
-        missed=station_data['onemin_missed']
-    if duration==600:
-        missed=station_data['tenmin_missed']
-    text=write(data, station_id, et, duration, config, missed) 
-    if duration==60:
-        station_data['onemin']="%d"%data[0]
-        station_data['onemin_missed']=text
-    if duration==600:
-        station_data['tenmin']="%d"%data[0]
-        station_data['tenmin_missed']=text                   
-    return station_data
+#===============================================================================
+# def process(stream, station_id, et, duration, config, station_data):
+#     data=calculate(stream)       
+#     missed=''
+#     if duration==60:
+#         missed=station_data['onemin_missed']
+#     if duration==600:
+#         missed=station_data['tenmin_missed']
+#     text=write(data, station_id, et, duration, config, missed) 
+#     if duration==60:
+#         station_data['onemin']="%d"%data[0]
+#         station_data['onemin_missed']=text
+#     if duration==600:
+#         station_data['tenmin']="%d"%data[0]
+#         station_data['tenmin_missed']=text                   
+#     return station_data
+#===============================================================================
 
 #===============================================================================
 # calculate_rsam - Calculates:

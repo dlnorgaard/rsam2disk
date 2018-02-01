@@ -7,7 +7,6 @@ Created on Mar 31, 2017
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-import sys
 
 class ConfigUI(object):
     '''
